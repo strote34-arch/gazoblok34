@@ -126,7 +126,7 @@ function SocialsEditor({ data, set }) {
 
 function ProductsEditor({ data, set }) {
   const list = data.PRODUCTS;
-  const add = () => set(d => { d.PRODUCTS.push({ id: 'p' + uid(), name: 'Новый блок', badge: '', density: 'D500', strength: 'B2,5', size: '600 × 250 × 300', thickness: 300, pricePerM3: 7000, blocksPerM3: 22.2, palletM3: 1.8, note: '' }); });
+  const add = () => set(d => { d.PRODUCTS.push({ id: 'p' + uid(), name: 'Новый блок', badge: '', density: 'D500', strength: 'B2,5', size: '600 × 250 × 300', sizes: ['600 × 250 × 300'], thickness: 300, pricePerM3: 7000, blocksPerM3: 22.2, palletM3: 1.8, note: '' }); });
   return (
     <ListSection count={list.length} addLabel="+ продукт" onAdd={add}>
       {list.map((p, i) => (
@@ -138,7 +138,8 @@ function ProductsEditor({ data, set }) {
           <Field label="Бейдж" hint="напр. Хит, Тёплый"><TextIn value={p.badge} onChange={v => set(d => { d.PRODUCTS[i].badge = v; })} /></Field>
           <Field label="Плотность"><TextIn value={p.density} onChange={v => set(d => { d.PRODUCTS[i].density = v; })} /></Field>
           <Field label="Прочность"><TextIn value={p.strength} onChange={v => set(d => { d.PRODUCTS[i].strength = v; })} /></Field>
-          <Field label="Размер, мм"><TextIn value={p.size} onChange={v => set(d => { d.PRODUCTS[i].size = v; })} mono /></Field>
+          <Field label="Размер по умолчанию, мм"><TextIn value={p.size} onChange={v => set(d => { d.PRODUCTS[i].size = v; })} mono /></Field>
+          <Field label="Все размеры (через запятую)" wide hint="Напр.: 600 × 250 × 200, 600 × 250 × 300, 600 × 250 × 400 — на карточке появятся кнопки выбора, цена за блок пересчитается"><TextIn value={(p.sizes || []).join(', ')} onChange={v => set(d => { d.PRODUCTS[i].sizes = v.split(',').map(s => s.trim()).filter(Boolean); })} mono /></Field>
           <Field label="Толщина, мм" hint="для картинки блока"><NumIn value={p.thickness} onChange={v => set(d => { d.PRODUCTS[i].thickness = v; })} /></Field>
           <Field label="Цена, ₽/м³"><NumIn value={p.pricePerM3} onChange={v => set(d => { d.PRODUCTS[i].pricePerM3 = v; })} /></Field>
           <Field label="Блоков в м³" hint="600×250×300 ≈ 22.2"><NumIn value={p.blocksPerM3} onChange={v => set(d => { d.PRODUCTS[i].blocksPerM3 = v; })} /></Field>

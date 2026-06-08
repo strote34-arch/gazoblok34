@@ -28,7 +28,8 @@ function Calculator() {
     const volume = net * (Number(th) / 1000);
     const blockVol = 0.6 * 0.25 * (Number(th) / 1000);
     const blocks = Math.ceil(volume / blockVol);
-    const pallets = Math.ceil(volume / 1.8);
+    const palletVol = ['D300', 'D350', 'D400'].includes(dens) ? 2.16 : 1.8;
+    const pallets = Math.ceil(volume / palletVol);
     const glue = Math.ceil(volume / 1.5);
     const price = DENSITIES.find(d => d.id === dens).price;
     const cost = Math.round(volume * price);
@@ -90,7 +91,7 @@ function Calculator() {
           </div>
           <div style={{ flex: 1, minWidth: 200 }}>
             <label style={cs.flabel}>Плотность блока<span style={cs.funit}>марка</span></label>
-            <div style={cs.seg}>
+            <div style={{ ...cs.seg, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
               {DENSITIES.map(d => (
                 <button key={d.id} onClick={() => setDens(d.id)}
                   style={{ ...cs.segBtn, ...(dens === d.id ? cs.segBtnOn : {}) }}>{d.id}</button>

@@ -21,6 +21,63 @@ function SectionHead({ eyebrow, title, text, action }) {
   );
 }
 
+/* Объём одного блока в м³ из строки размера "600 × 250 × 300". */
+function sizeVolumeM3(s) {
+  const m = String(s || '').match(/\d+/g);
+  if (!m || m.length < 3) return null;
+  return (Number(m[0]) * Number(m[1]) * Number(m[2])) / 1e9;
+}
+
+function ProductCard({ p }) {
+  const sizes = (p.sizes && p.sizes.length) ? p.sizes : [p.size];
+  const initial = (p.size && sizes.includes(p.size)) ? p.size : sizes[0];
+  const [sz, setSz] = React.useState(initial);
+  const vol = sizeVolumeM3(sz);
+  const perBlock = vol ? Math.round(p.pricePerM3 * vol) : Math.round(p.pricePerM3 / p.blocksPerM3);
+  return (
+    <article className="card" style={ps.card}>
+      <div style={ps.thumb}>
+        <img src={p.img || 'assets/gras-block.jpg'} alt={p.name} style={ps.thumbImg} />
+        <span className="chip chip--accent" style={ps.badge}>{p.badge}</span>
+      </div>
+      <div style={ps.body}>
+        <div style={ps.cardHead}>
+          <h3 style={ps.name}>{p.name}</h3>
+          <span className="chip">{p.density}</span>
+        </div>
+        <div className="mono" style={ps.strength}>Прочность {p.strength}</div>
+        <p style={ps.note}>{p.note}</p>
+
+        {sizes.length > 1 && (
+          <div style={ps.sizeBlock}>
+            <div style={ps.sizeLabel}>Размер, мм:</div>
+            <div style={ps.sizeWrap}>
+              {sizes.map(s => (
+                <button key={s} type="button" onClick={() => setSz(s)}
+                  className="mono"
+                  style={{ ...ps.sizeChip, ...(s === sz ? ps.sizeChipOn : {}) }}>
+                  {s.replace(/\s/g, '')}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {sizes.length <= 1 && <div className="mono" style={ps.size}>{sz} мм</div>}
+
+        <div style={ps.footRow}>
+          <div>
+            <div style={ps.price}>{fmt(p.pricePerM3)} ₽<span style={ps.priceUnit}>/м³</span></div>
+            <div className="mono" style={ps.perBlock}>~{fmt(perBlock)} ₽ / блок <span style={ps.perBlockSize}>({sz.replace(/\s/g, '')})</span></div>
+          </div>
+          <a className="btn btn-dark btn-sm" href={window.GB.MAX_LINK} target="_blank" rel="noopener">
+            <span className="max-glyph"></span> Заказать
+          </a>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 function Products() {
   return (
     <section id="products" className="section">
@@ -32,31 +89,7 @@ function Products() {
           action={<a className="btn btn-ghost" href="#order">Запросить прайс</a>}
         />
         <div style={ps.grid}>
-          {window.GB.PRODUCTS.map(p => (
-            <article key={p.id} className="card" style={ps.card}>
-              <div style={ps.thumb}>
-                <img src={p.img || 'assets/gras-block.jpg'} alt={p.name} style={ps.thumbImg} />
-                <span className="chip chip--accent" style={ps.badge}>{p.badge}</span>
-              </div>
-              <div style={ps.body}>
-                <div style={ps.cardHead}>
-                  <h3 style={ps.name}>{p.name}</h3>
-                  <span className="chip">{p.density}</span>
-                </div>
-                <div className="mono" style={ps.size}>{p.size} мм</div>
-                <p style={ps.note}>{p.note}</p>
-                <div style={ps.footRow}>
-                  <div>
-                    <div style={ps.price}>{fmt(p.pricePerM3)} ₽<span style={ps.priceUnit}>/м³</span></div>
-                    <div className="mono" style={ps.perBlock}>~{Math.round(p.pricePerM3 / p.blocksPerM3)} ₽ / {p.unitLabel || 'блок'}</div>
-                  </div>
-                  <a className="btn btn-dark btn-sm" href={window.GB.MAX_LINK} target="_blank" rel="noopener">
-                    <span className="max-glyph"></span> Заказать
-                  </a>
-                </div>
-              </div>
-            </article>
-          ))}
+          {window.GB.PRODUCTS.map(p => <ProductCard key={p.id} p={p} />)}
         </div>
       </div>
     </section>
@@ -97,11 +130,16 @@ function Videos() {
             <a key={v.id} className="video-card" href={v.url || window.GB.YT_LINK} target="_blank" rel="noopener"
                style={{ ...vs.card, ...(i === 0 ? vs.cardFeature : {}) }}>
               <div className="ph" style={{ ...vs.thumb, aspectRatio: i === 0 ? '16/10' : '16/10' }}>
+                <span className="ph__label" style={vs.fallbackLabel}>{v.frame}</span>
                 {vid
                   ? <img src={`https://i.ytimg.com/vi/${vid}/hqdefault.jpg`} alt={v.title}
-                         loading="lazy" style={vs.thumbImg}
-                         onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                  : <span className="ph__label">{v.frame}</span>}
+                         loading="lazy" referrerPolicy="no-referrer" style={vs.thumbImg}
+                         onError={(e) => {
+                           const img = e.currentTarget;
+                           if (img.dataset.fb !== '1') { img.dataset.fb = '1'; img.src = `https://img.youtube.com/vi/${vid}/hqdefault.jpg`; }
+                           else { img.style.display = 'none'; }
+                         }} />
+                  : null}
                 <div className="ph__play"></div>
                 {v.dur ? <span style={vs.dur}>{v.dur}</span> : null}
                 <span className="chip" style={vs.vtag}>{v.tag}</span>
@@ -361,12 +399,19 @@ const ps = {
   body: { padding: 20, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 },
   cardHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 },
   name: { fontSize: 19, fontWeight: 700 },
+  strength: { fontSize: 12.5, color: 'var(--ink-3)', letterSpacing: '.02em' },
   size: { fontSize: 12.5, color: 'var(--ink-3)', letterSpacing: '.02em' },
+  sizeBlock: { display: 'flex', flexDirection: 'column', gap: 7 },
+  sizeLabel: { fontSize: 12, color: 'var(--ink-3)', fontWeight: 600 },
+  sizeWrap: { display: 'flex', flexWrap: 'wrap', gap: 6 },
+  sizeChip: { padding: '5px 9px', borderRadius: 7, border: '1px solid var(--line)', background: 'var(--surface)', color: 'var(--ink-2)', fontSize: 11.5, cursor: 'pointer', lineHeight: 1.2, transition: 'all .15s ease' },
+  sizeChipOn: { background: 'var(--ink)', color: 'var(--bg)', borderColor: 'var(--ink)' },
   note: { fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.5, flex: 1 },
   footRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 6, paddingTop: 14, borderTop: '1px solid var(--line-soft)' },
   price: { fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em' },
   priceUnit: { fontSize: 14, fontWeight: 600, color: 'var(--ink-3)', marginLeft: 2 },
   perBlock: { fontSize: 12, color: 'var(--ink-3)', marginTop: 2 },
+  perBlockSize: { opacity: .7 },
 };
 
 const vs = {
@@ -374,7 +419,8 @@ const vs = {
   card: { display: 'flex', flexDirection: 'column', gap: 14 },
   cardFeature: { gridColumn: 'span 2', gridRow: 'span 1' },
   thumb: { width: '100%', position: 'relative' },
-  thumbImg: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
+  fallbackLabel: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 16, fontSize: 14, color: 'var(--ink-3)', zIndex: 0 },
+  thumbImg: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', zIndex: 1 },
   dur: { position: 'absolute', bottom: 10, right: 10, fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, color: 'var(--on-accent)', background: 'oklch(0.235 0.012 70 / 0.85)', padding: '3px 8px', borderRadius: 6 },
   vtag: { position: 'absolute', top: 10, left: 10, background: 'oklch(0.995 0.003 80 / 0.9)' },
   meta: { display: 'flex', flexDirection: 'column', gap: 6 },
