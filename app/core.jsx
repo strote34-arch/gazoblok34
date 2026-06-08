@@ -104,7 +104,7 @@ function Hero({ showMarquee = true }) {
         </div>
 
         <div style={{ ...ho.right, display: isMobile ? 'none' : 'block' }}>
-          <img src="assets/slots/hero-house.webp" alt="Дом из газоблока ГРАС" style={{ ...ho.heroImg, height: 'auto', display: 'block', objectFit: 'cover', borderRadius: 14 }} />
+          <img src="assets/hero-house-illustration.png" alt="Современный дом из газоблока ГРАС" style={{ ...ho.heroImg, height: 'auto', display: 'block', objectFit: 'cover', borderRadius: 14 }} />
           <div className="card" style={ho.floatCard}>
             <div style={ho.floatAvatar}>
               <img src="assets/slots/author-avatar.webp" alt="Автор канала" style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover' }} />
