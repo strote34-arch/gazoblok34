@@ -1,0 +1,5 @@
+# Не заливать на сайт служебные файлы
+telegram-bot
+DEPLOY-vercel.md
+*.md
+.DS_Store

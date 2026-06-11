@@ -16,4 +16,4 @@ Disallow: /admin.html
 Disallow: /app/
 Disallow: /telegram-bot/
 
-Sitemap: https://xn--34-6kcaak3amw0c.xn--p1ai/sitemap.xml
+Sitemap: https://gazoblok34.ru/sitemap.xml
