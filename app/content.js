@@ -1,5 +1,5 @@
 /* ГАЗОБЛОК34 — опубликованный контент сайта (виден ВСЕМ посетителям).
-   Создан кнопкой «Скачать файл для сайта» в админке 11.06.2026, 20:03:09.
+   Создан кнопкой «Скачать файл для сайта» в админке 11.06.2026, 20:12:54.
    Загрузите этот файл в GitHub (папка app/), заменив старый content.js. */
 window.GB_PUBLISHED = {
   "MAX_LINK": "https://max.ru/u/f9LHodD0cOKLM7z8Ql0dOJQj2cvvljdZN_O7wJuAmhTrjfpmM2J71Zo8BRg",
@@ -254,6 +254,15 @@ window.GB_PUBLISHED = {
       "tag": "не горит и не тонит",
       "frame": "",
       "url": "https://youtu.be/Bw8j7uwfno8"
+    },
+    {
+      "id": 1781197848696,
+      "title": "\"Hauberk на газоблоке\" Хауберг #ТехноНиколь",
+      "dur": "",
+      "views": "",
+      "tag": "Хауберг",
+      "frame": "Тестируем Hauberk на газоблоке",
+      "url": "https://youtu.be/wqCKZbmL4aY"
     }
   ],
   "ARTICLES": [
