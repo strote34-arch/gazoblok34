@@ -129,7 +129,7 @@ function CalcMenu({ align = 'right' }) {
   ].filter(i => sec[i.sec] !== false);
   if (!items.length) return null;
   return (
-    <div style={{ ...cm.row, justifyContent: align === 'left' ? 'flex-start' : 'flex-end' }} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+    <div style={{ ...cm.row, justifyContent: align === 'left' ? 'flex-start' : 'flex-end', marginTop: align === 'left' ? 0 : cm.row.marginTop }} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
       <div style={cm.anchor}>
         <button type="button" style={cm.btn} onClick={() => setOpen(o => !o)} aria-expanded={open} aria-haspopup="true">
           <span style={cm.icon}>▦</span>
@@ -155,12 +155,12 @@ function CalcMenu({ align = 'right' }) {
 }
 
 const cm = {
-  row: { display: 'flex', justifyContent: 'flex-end', marginTop: -10, marginBottom: 20 },
-  anchor: { position: 'relative', zIndex: 40 },
-  btn: { display: 'inline-flex', alignItems: 'center', gap: 10, padding: '13px 20px', borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'var(--on-accent, #fff)', fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 800, letterSpacing: '.04em', cursor: 'pointer', boxShadow: 'var(--shadow-md)' },
+  row: { display: 'flex', justifyContent: 'flex-end', marginTop: -26, marginBottom: 16 },
+  anchor: { position: 'relative', zIndex: 40, width: 250, maxWidth: '100%' },
+  btn: { width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '13px 20px', borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'var(--on-accent, #fff)', fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 800, letterSpacing: '.04em', cursor: 'pointer', boxShadow: 'var(--shadow-md)' },
   icon: { fontSize: 14, opacity: .9 },
   chev: { fontSize: 13, transition: 'transform .18s ease', display: 'inline-block' },
-  drop: { position: 'absolute', top: '100%', right: 0, paddingTop: 8, minWidth: 250 },
+  drop: { position: 'absolute', top: '100%', right: 0, left: 0, paddingTop: 8, width: '100%' },
   menu: { display: 'flex', flexDirection: 'column', padding: 8, boxShadow: 'var(--shadow-lg)', background: 'var(--surface)' },
   item: { display: 'grid', gridTemplateColumns: '1fr auto', gridTemplateRows: 'auto auto', columnGap: 10, alignItems: 'center', padding: '11px 13px', borderRadius: 9, color: 'var(--ink)', transition: 'background .12s ease' },
   itemLabel: { fontSize: 15.5, fontWeight: 700, gridRow: 1 },

@@ -41,7 +41,7 @@ BOT_TOKEN = os.environ.get("GB_BOT_TOKEN", "8840104364:AAHrRb6w6ACanyQ04ZzyonFDD
 ADMIN_CHAT_ID = int(os.environ.get("GB_ADMIN_CHAT_ID", "69970857"))  # ← ВПИШИТЕ ваш Telegram ID числом вместо 0, напр. 461025478
 
 # Сайт и контакты (для текста сообщений)
-SITE = "газоблок34.рф"
+SITE = "gazoblok34.ru"
 PHONE = "+7 996 484-03-73"
 BETON_TG = "@beribeton034"
 BETON_MAX = "https://max.ru/u/f9LHodD0cOIwJg2Hq0Y2VczaSymqAx6gHBYvSkqm0LM-8MSKIF-tckLd_uA"
