@@ -71,6 +71,11 @@ function BrickCatalog() {
 
 /* ---------- 3D BIM-модели ---------- */
 function BimSection() {
+  const railRef = React.useRef(null);
+  const scroll = (dir) => {
+    const el = railRef.current;
+    if (el) el.scrollBy({ left: dir * Math.min(680, el.clientWidth * 0.8), behavior: 'smooth' });
+  };
   return (
     <section id="bim" className="section" style={{ background: 'var(--surface-2)', borderBlock: '1px solid var(--line)' }}>
       <div className="wrap">
@@ -80,9 +85,13 @@ function BimSection() {
             <h2>3D BIM-модели</h2>
             <p>Готовые BIM-модели блоков и элементов ГРАС для точного проектирования дома в Revit, ArchiCAD, Renga и nanoCAD.</p>
           </div>
-          <a className="btn btn-ghost" href={window.GB.BIM_URL} target="_blank" rel="noopener">Скачать модели на ГРАС →</a>
+          <div style={bim.nav}>
+            <a className="btn btn-ghost" href={window.GB.BIM_URL} target="_blank" rel="noopener">Скачать модели на ГРАС →</a>
+            <button style={bim.navBtn} onClick={() => scroll(-1)} aria-label="Назад">←</button>
+            <button style={bim.navBtn} onClick={() => scroll(1)} aria-label="Вперёд">→</button>
+          </div>
         </div>
-        <div style={bim.grid}>
+        <div ref={railRef} className="gb-rail" style={bim.rail}>
           {window.GB.BIM.map(m => (
             <a key={m.id} className="card" href={window.GB.BIM_URL} target="_blank" rel="noopener" style={bim.card}>
               <div style={bim.cube}>
@@ -166,7 +175,10 @@ const brc = {
 
 const bim = {
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px,1fr))', gap: 18 },
-  card: { display: 'flex', flexDirection: 'column', overflow: 'hidden' },
+  rail: { display: 'flex', gap: 18, overflowX: 'auto', scrollSnapType: 'x proximity', paddingBottom: 10, scrollbarWidth: 'none' },
+  nav: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' },
+  navBtn: { width: 44, height: 44, borderRadius: 999, border: '1px solid var(--line)', background: 'var(--surface)', fontSize: 18, color: 'var(--ink)', cursor: 'pointer', display: 'grid', placeItems: 'center' },
+  card: { flex: 'none', width: 260, scrollSnapAlign: 'start', display: 'flex', flexDirection: 'column', overflow: 'hidden' },
   cube: { aspectRatio: '16/8', background: 'linear-gradient(135deg, var(--ink) 0%, oklch(0.32 0.02 260) 100%)', display: 'grid', placeItems: 'center' },
   cubeGlyph: { fontSize: 52, color: 'oklch(0.8 0.06 250)', opacity: .9 },
   body: { padding: 20, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 },

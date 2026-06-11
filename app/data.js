@@ -328,15 +328,29 @@ const GB_DEFAULTS = {
 /* ---------- store ---------- */
 function gbClone(o) { return JSON.parse(JSON.stringify(o)); }
 
+/* База контента:
+   1) GB_DEFAULTS — встроенные значения в коде;
+   2) GB_PUBLISHED — «опубликованные для всех» правки из файла app/content.js (если есть);
+   3) localStorage — локальный черновик в этом браузере.
+   Каждый следующий уровень перекрывает предыдущий. */
+function gbBase() {
+  const base = gbClone(GB_DEFAULTS);
+  if (window.GB_PUBLISHED && typeof window.GB_PUBLISHED === 'object') {
+    return Object.assign(base, gbClone(window.GB_PUBLISHED));
+  }
+  return base;
+}
+
 function gbLoad() {
+  const base = gbBase();
   try {
     const raw = localStorage.getItem(GB_KEY);
     if (raw) {
       const saved = JSON.parse(raw);
-      return Object.assign(gbClone(GB_DEFAULTS), saved);
+      return Object.assign(base, saved);
     }
   } catch (e) { /* ignore */ }
-  return gbClone(GB_DEFAULTS);
+  return base;
 }
 
 window.GB_DEFAULTS = GB_DEFAULTS;
@@ -346,6 +360,7 @@ window.GBStore = {
   KEY: GB_KEY,
   get() { return gbLoad(); },
   defaults() { return gbClone(GB_DEFAULTS); },
+  published() { return gbBase(); },
   save(data) {
     localStorage.setItem(GB_KEY, JSON.stringify(data));
     window.GB = gbLoad();
@@ -353,7 +368,7 @@ window.GBStore = {
   },
   reset() {
     localStorage.removeItem(GB_KEY);
-    window.GB = gbClone(GB_DEFAULTS);
+    window.GB = gbBase();
     return window.GB;
   },
 };

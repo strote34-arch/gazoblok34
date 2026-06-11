@@ -91,7 +91,7 @@ function ImageField({ value, onChange, label = "Фото" }) {
 }
 
 /* ---------- item card wrapper ---------- */
-function ItemCard({ title, badge, onRemove, onUp, onDown, children, canUp, canDown }) {
+function ItemCard({ title, badge, onRemove, onUp, onDown, children, canUp, canDown, horizontal }) {
   return (
     <div style={af.item}>
       <div style={af.itemHead}>
@@ -100,8 +100,8 @@ function ItemCard({ title, badge, onRemove, onUp, onDown, children, canUp, canDo
           <span>{title}</span>
         </div>
         <div style={af.itemActions}>
-          <button style={af.iconBtn} disabled={!canUp} onClick={onUp} title="Выше">↑</button>
-          <button style={af.iconBtn} disabled={!canDown} onClick={onDown} title="Ниже">↓</button>
+          <button style={af.iconBtn} disabled={!canUp} onClick={onUp} title={horizontal ? 'Левее' : 'Выше'}>{horizontal ? '←' : '↑'}</button>
+          <button style={af.iconBtn} disabled={!canDown} onClick={onDown} title={horizontal ? 'Правее' : 'Ниже'}>{horizontal ? '→' : '↓'}</button>
           <button style={{ ...af.iconBtn, ...af.del }} onClick={onRemove} title="Удалить">✕</button>
         </div>
       </div>
@@ -253,7 +253,7 @@ function ProjectsEditor({ data, set }) {
   return (
     <ListSection count={list.length} addLabel="+ проект" onAdd={add}>
       {list.map((p, i) => (
-        <ItemCard key={p.id} badge={i + 1} title={p.name}
+        <ItemCard key={p.id} badge={i + 1} title={p.name} horizontal
           canUp={i > 0} canDown={i < list.length - 1}
           onUp={() => move(set, 'PROJECTS', i, -1)} onDown={() => move(set, 'PROJECTS', i, 1)}
           onRemove={() => set(d => { d.PROJECTS.splice(i, 1); })}>
@@ -283,7 +283,7 @@ function AnalyticsEditor({ data, set }) {
           </Field>
         </div>
         <p style={{ fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.55, marginTop: 4 }}>
-          Как подключить: зарегистрируйтесь на metrika.yandex.ru, создайте счётчик для адреса газоблок34.рф,
+          Как подключить: зарегистрируйтесь на metrika.yandex.ru, создайте счётчик для адреса gazoblok34.ru,
           скопируйте его <b>номер</b> и вставьте сюда. Вставлять весь код не нужно — сайт подключит счётчик сам.
           Чтобы отключить — очистите поле.
         </p>
@@ -383,7 +383,7 @@ function GbiEditor({ data, set }) {
         </div>
       </div>
       {list.map((g, i) => (
-        <ItemCard key={g.id} badge={i + 1} title={g.name}
+        <ItemCard key={g.id} badge={i + 1} title={g.name} horizontal
           canUp={i > 0} canDown={i < list.length - 1}
           onUp={() => move(set, 'GBI', i, -1)} onDown={() => move(set, 'GBI', i, 1)}
           onRemove={() => set(d => { d.GBI.splice(i, 1); })}>
@@ -408,7 +408,7 @@ function BricksEditor({ data, set }) {
   return (
     <div style={af.stack}>
       {list.map((b, i) => (
-        <ItemCard key={b.id} badge={i + 1} title={b.name}
+        <ItemCard key={b.id} badge={i + 1} title={b.name} horizontal
           canUp={i > 0} canDown={i < list.length - 1}
           onUp={() => move(set, 'BRICKS', i, -1)} onDown={() => move(set, 'BRICKS', i, 1)}
           onRemove={() => set(d => { d.BRICKS.splice(i, 1); })}>
@@ -485,6 +485,24 @@ function Admin({ onLogout }) {
   };
   const flash = (m) => { setToast(m); clearTimeout(flash._t); flash._t = setTimeout(() => setToast(null), 2600); };
 
+  /* «Опубликовать для всех» — скачивает файл app/content.js с текущим контентом.
+     Этот файл нужно залить в GitHub (папка app/) — тогда правки увидят все. */
+  const publish = () => {
+    const payload = dirty ? data : window.GBStore.get();
+    const header =
+      "/* ГАЗОБЛОК34 — опубликованный контент сайта (виден ВСЕМ посетителям).\n" +
+      "   Создан кнопкой «Скачать файл для сайта» в админке " + new Date().toLocaleString('ru-RU') + ".\n" +
+      "   Загрузите этот файл в GitHub (папка app/), заменив старый content.js. */\n";
+    const body = "window.GB_PUBLISHED = " + JSON.stringify(payload, null, 2) + ";\n";
+    const blob = new Blob([header + body], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'content.js';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    flash('Файл content.js скачан — загрузите его в GitHub (папка app)');
+  };
+
   useEffect(() => {
     const beforeUnload = (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } };
     window.addEventListener('beforeunload', beforeUnload);
@@ -515,6 +533,7 @@ function Admin({ onLogout }) {
           {onLogout && <button style={af.linkBtn} onClick={onLogout}>Выйти</button>}
           {dirty && <button style={af.ghostBtn} onClick={discard}>Отменить</button>}
           <button style={{ ...af.saveBtn, ...(dirty ? {} : af.saveBtnIdle) }} onClick={save} disabled={!dirty}>Сохранить</button>
+          <button style={af.publishBtn} onClick={publish} title="Скачать файл content.js для загрузки в GitHub">↓ Скачать файл для сайта</button>
         </div>
       </header>
 
@@ -531,7 +550,15 @@ function Admin({ onLogout }) {
             ))}
           </nav>
           <button style={af.resetBtn} onClick={resetAll}>Сбросить к стандартному</button>
-          <p style={af.sideNote}>Данные хранятся в этом браузере. Чтобы изменения увидели посетители на их устройствах, нужен сервер — сейчас правки видны на вашем компьютере.</p>
+          <div style={af.publishHelp}>
+            <b style={{ color: 'var(--ink)', fontSize: 13 }}>Чтобы правки увидели ВСЕ:</b>
+            <ol style={{ margin: '8px 0 0', paddingLeft: 18, lineHeight: 1.6 }}>
+              <li>Нажмите «Сохранить».</li>
+              <li>Нажмите «↓ Скачать файл для сайта» — скачается content.js.</li>
+              <li>Загрузите его в GitHub в папку app/, заменив старый.</li>
+            </ol>
+          </div>
+          <p style={af.sideNote}>Без этого правки хранятся только в вашем браузере и видны только вам.</p>
         </aside>
 
         {/* content */}
@@ -568,6 +595,7 @@ const af = {
   ghostBtn: { fontSize: 14, fontWeight: 600, color: 'var(--ink-2)', padding: '9px 14px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--surface)', cursor: 'pointer' },
   saveBtn: { fontSize: 14, fontWeight: 700, color: 'var(--on-accent, #fff)', padding: '10px 22px', borderRadius: 9, border: 'none', background: 'var(--accent)', cursor: 'pointer' },
   saveBtnIdle: { background: 'var(--line)', color: 'var(--ink-3)', cursor: 'default' },
+  publishBtn: { fontSize: 14, fontWeight: 700, color: '#fff', padding: '10px 18px', borderRadius: 9, border: 'none', background: '#1f8a4d', cursor: 'pointer' },
 
   body: { display: 'flex', alignItems: 'flex-start', gap: 0, flex: 1 },
   side: { position: 'sticky', top: 71, alignSelf: 'flex-start', width: 252, flex: 'none', padding: 'clamp(16px,2vw,24px)', display: 'flex', flexDirection: 'column', gap: 16, borderRight: '1px solid var(--line)', minHeight: 'calc(100vh - 71px)' },
@@ -578,6 +606,7 @@ const af = {
   navCount: { marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: 12, opacity: .6 },
   resetBtn: { marginTop: 'auto', fontSize: 13, fontWeight: 600, color: 'var(--ink-3)', padding: '10px', borderRadius: 9, border: '1px dashed var(--line)', background: 'none', cursor: 'pointer' },
   sideNote: { fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 },
+  publishHelp: { margin: '14px 0 0', padding: '12px 14px', borderRadius: 10, background: 'oklch(0.96 0.03 150)', border: '1px solid oklch(0.85 0.06 150)', fontSize: 12.5, color: 'var(--ink-2)' },
 
   content: { flex: 1, minWidth: 0, padding: 'clamp(20px,3vw,40px)', maxWidth: 920 },
   contentHead: { marginBottom: 24 },

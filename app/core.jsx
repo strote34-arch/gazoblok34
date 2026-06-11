@@ -118,17 +118,18 @@ function Header() {
 }
 
 /* Кнопка «КАЛЬКУЛЯТОР» над фото дома: наведение/клик → выбор Газоблок / Кирпич / Бетон */
-function CalcMenu() {
+function CalcMenu({ align = 'right' }) {
   const [open, setOpen] = React.useState(false);
   const sec = useSections();
   const items = [
     { href: '#calc',       label: 'Газоблок', d: 'блоки, поддоны, клей', sec: 'calc' },
     { href: '#brick-calc', label: 'Кирпич',   d: 'облицовка фасада',   sec: 'bricks' },
     { href: '#beton',      label: 'Бетон',    d: 'кубы и миксеры',       sec: 'beton' },
+    { href: '#gbi-calc',   label: 'ЖБИ',      d: 'блоки, перемычки, кольца', sec: 'gbi' },
   ].filter(i => sec[i.sec] !== false);
   if (!items.length) return null;
   return (
-    <div style={cm.row} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+    <div style={{ ...cm.row, justifyContent: align === 'left' ? 'flex-start' : 'flex-end' }} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
       <div style={cm.anchor}>
         <button type="button" style={cm.btn} onClick={() => setOpen(o => !o)} aria-expanded={open} aria-haspopup="true">
           <span style={cm.icon}>▦</span>
@@ -136,7 +137,7 @@ function CalcMenu() {
           <span style={{ ...cm.chev, transform: open ? 'rotate(180deg)' : 'none' }}>▾</span>
         </button>
         {open && (
-          <div style={cm.drop}>
+          <div style={{ ...cm.drop, right: align === 'left' ? 'auto' : 0, left: align === 'left' ? 0 : 'auto' }}>
             <div className="card" style={cm.menu}>
               {items.map(i => (
                 <a key={i.href} href={i.href} style={cm.item} onClick={() => setOpen(false)}>
@@ -173,7 +174,7 @@ function Hero({ showMarquee = true }) {
     <section id="top" style={ho.wrap}>
       <div className="wrap" style={{ ...ho.grid, gridTemplateColumns: isMobile ? '1fr' : ho.grid.gridTemplateColumns }}>
         <div style={ho.left}>
-          <span className="chip chip--accent">Волгоград · газоблок34.рф</span>
+          <span className="chip chip--accent">Волгоград · gazoblok34.ru</span>
           <h1 style={ho.h1}>
             Построил дом <span style={ho.hlight}>200&nbsp;м²</span><br/>
             за 62 дня — и покажу,<br/>как сделать так же
@@ -189,6 +190,7 @@ function Hero({ showMarquee = true }) {
               Смотреть канал
             </a>
           </div>
+          {isMobile && <div style={{ marginTop: 14 }}><CalcMenu align="left" /></div>}
           <div className="m-hero-stats" style={ho.stats}>
             {window.GB.STATS.map((s, i) => (
               <div key={i} style={ho.stat}>
@@ -242,7 +244,7 @@ function OrderForm() {
   const submit = (e) => {
     e.preventDefault();
     const text =
-      `Заявка с сайта газоблок34.рф:%0A` +
+      `Заявка с сайта gazoblok34.ru:%0A` +
       `Имя: ${name || '—'}%0AТелефон: ${phone || '—'}%0AЗапрос: ${need}%0A` +
       (msg ? `Комментарий: ${msg}%0A` : '');
     window.open(`${window.GB.MAX_LINK}`, '_blank');
@@ -382,7 +384,7 @@ function Footer() {
           </div>
         </div>
         <div style={fo.bottom}>
-          <span>© {new Date().getFullYear()} ГАЗОБЛОК34 · газоблок34.рф</span>
+          <span>© {new Date().getFullYear()} ГАЗОБЛОК34 · gazoblok34.ru</span>
           <span style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
             <a href="admin.html" style={{ ...fo.fLink, fontSize: 13, opacity: .7 }}>Админка</a>
             <span className="mono" style={{ opacity: .7 }}>Строим своими руками</span>
@@ -412,7 +414,7 @@ function ShareBar() {
   const [copied, setCopied] = React.useState('');
   const pageUrl = (typeof window !== 'undefined' && window.location && /^https?:/.test(window.location.href))
     ? window.location.href.split('#')[0]
-    : 'https://газоблок34.рф';
+    : 'https://gazoblok34.ru';
   const u = encodeURIComponent(pageUrl);
   const t = encodeURIComponent('ГАЗОБЛОК34 — газоблок ГРАС и стройка дома, Волгоград');
 

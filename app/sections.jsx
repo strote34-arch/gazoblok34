@@ -192,6 +192,11 @@ function Articles() {
 }
 
 function Projects() {
+  const railRef = React.useRef(null);
+  const scroll = (dir) => {
+    const el = railRef.current;
+    if (el) el.scrollBy({ left: dir * Math.min(680, el.clientWidth * 0.8), behavior: 'smooth' });
+  };
   return (
     <section id="projects" className="section" style={{ background: 'var(--surface-2)', borderBlock: '1px solid var(--line)' }}>
       <div className="wrap">
@@ -199,9 +204,9 @@ function Projects() {
           eyebrow="Готовые проекты · ГРАС"
           title="С чего начать стройку"
           text="Готовые проекты домов из газобетона ГРАС — от компактных одноэтажных до больших семейных. Откройте проект, чтобы прочитать и скачать на сайте завода."
-          action={<a className="btn btn-ghost" href={window.GB.PROJECTS_URL} target="_blank" rel="noopener">Все проекты →</a>}
+          action={<div style={prs.nav}><a className="btn btn-ghost" href={window.GB.PROJECTS_URL} target="_blank" rel="noopener">Все проекты →</a><button style={prs.navBtn} onClick={() => scroll(-1)} aria-label="Назад">←</button><button style={prs.navBtn} onClick={() => scroll(1)} aria-label="Вперёд">→</button></div>}
         />
-        <div style={prs.grid}>
+        <div ref={railRef} className="gb-rail" style={prs.rail}>
           {window.GB.PROJECTS.map(p => (
             <article key={p.id} className="card" style={prs.card}>
               <img src={p.img || `assets/slots/project-${p.id}.webp`} alt={`Проект «${p.name}»`} loading="lazy" style={{ ...prs.thumb, width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = 'assets/gras-block.jpg'; }} />
@@ -459,7 +464,10 @@ const am = {
 
 const prs = {
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(258px,1fr))', gap: 20 },
-  card: { overflow: 'hidden' },
+  rail: { display: 'flex', gap: 18, overflowX: 'auto', scrollSnapType: 'x proximity', paddingBottom: 10, scrollbarWidth: 'none' },
+  nav: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' },
+  navBtn: { width: 44, height: 44, borderRadius: 999, border: '1px solid var(--line)', background: 'var(--surface)', fontSize: 18, color: 'var(--ink)', cursor: 'pointer', display: 'grid', placeItems: 'center' },
+  card: { flex: 'none', width: 300, scrollSnapAlign: 'start', overflow: 'hidden', display: 'flex', flexDirection: 'column' },
   thumb: { aspectRatio: '4/3', borderRadius: 0 },
   body: { padding: 20, display: 'flex', flexDirection: 'column', gap: 16 },
   headRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 },

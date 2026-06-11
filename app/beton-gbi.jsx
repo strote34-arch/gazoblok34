@@ -230,7 +230,7 @@ function GbiSection() {
       </div>
 
       {/* калькулятор ЖБИ */}
-      <div className="wrap" ref={calcRef}>
+      <div className="wrap" id="gbi-calc" ref={calcRef}>
         <div style={{ ...bt.calcGrid, gridTemplateColumns: isMobile ? '1fr' : bt.calcGrid.gridTemplateColumns, marginTop: 'clamp(22px,3vw,34px)' }}>
           <div className="card" style={bt.inputs}>
             <div style={{ marginBottom: 18 }}>

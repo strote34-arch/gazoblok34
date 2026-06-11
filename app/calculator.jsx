@@ -39,7 +39,7 @@ function Calculator() {
   React.useEffect(() => { setPulse(true); const t = setTimeout(() => setPulse(false), 320); return () => clearTimeout(t); }, [r.blocks, r.cost]);
 
   const orderText =
-    `Здравствуйте! Расчёт с сайта газоблок34.рф:%0A` +
+    `Здравствуйте! Расчёт с сайта gazoblok34.ru:%0A` +
     `• Дом ${len}×${wid} м, высота стен ${hgt} м%0A` +
     `• Газоблок ${dens}, толщина стены ${th} мм%0A` +
     `• Объём: ${r.volume} м³ · блоков ~${fmt(r.blocks)} шт · поддонов ${r.pallets}%0A` +
@@ -227,7 +227,7 @@ function BrickCalculator() {
   React.useEffect(() => { setPulse(true); const t = setTimeout(() => setPulse(false), 320); return () => clearTimeout(t); }, [r.withSpare]);
 
   const orderText =
-    `Здравствуйте! Расчёт облицовочного кирпича с сайта газоблок34.рф:%0A` +
+    `Здравствуйте! Расчёт облицовочного кирпича с сайта gazoblok34.ru:%0A` +
     `• Стена ${len} м × ${hgt} м, проёмы ${op} м²%0A` +
     `• Формат ${fmtId}, кладка ${klId === 0.5 ? 'в полкирпича' : 'в кирпич'}%0A` +
     `• Площадь ${r.area} м² · нужно ~${fmt(r.withSpare)} шт (с запасом 5%)%0AХочу подобрать кирпич и оформить заказ.`;
