@@ -10,21 +10,61 @@ function useIsMobile(bp = 900) {
   return m;
 }
 
-const NAV = [
-  { href: '#calc', label: 'Калькулятор' },
-  { href: '#products', label: 'Газоблок' },
-  { href: '#bricks', label: 'Кирпич' },
-  { href: '#video', label: 'Видео' },
-  { href: '#articles', label: 'Статьи' },
-  { href: '#projects', label: 'Проекты' },
-  { href: '#delivery', label: 'Доставка' },
-  { href: '#faq', label: 'Вопросы' },
+const NAV_ALL = [
+  { href: '#calc', label: 'Калькулятор', sec: 'calc' },
+  { href: '#products', label: 'Газоблок', sec: 'products' },
+  { href: '#bricks', label: 'Кирпич', sec: 'bricks' },
+  { href: '#beton', label: 'Бетон', sec: 'beton' },
+  { href: '#gbi', label: 'ЖБИ', sec: 'gbi' },
+  { href: '#video', label: 'Видео', sec: 'video' },
+  { href: '#articles', label: 'Статьи', sec: 'articles' },
+  { href: '#projects', label: 'Проекты', sec: 'projects' },
+  { href: '#delivery', label: 'Доставка', sec: 'delivery' },
+  { href: '#faq', label: 'Вопросы', sec: 'faq' },
 ];
+
+/* Видимость разделов: читает GB.SECTIONS и обновляется по событию gb:sections */
+function useSections() {
+  const [s, setS] = React.useState(() => (window.GB.SECTIONS || {}));
+  React.useEffect(() => {
+    const on = (e) => setS({ ...e.detail });
+    window.addEventListener('gb:sections', on);
+    return () => window.removeEventListener('gb:sections', on);
+  }, []);
+  return s;
+}
+function navItems(sec) { return NAV_ALL.filter(n => sec[n.sec] !== false); }
+
+/* Scrollspy: какой раздел сейчас на экране → этот пункт меню становится красным */
+function useScrollSpy(hrefs) {
+  const [active, setActive] = React.useState(null);
+  React.useEffect(() => {
+    const ids = hrefs.map(h => h.replace('#', ''));
+    const onScroll = () => {
+      const mark = window.innerHeight * 0.32; // линия «считания» — верхняя треть экрана
+      let current = null;
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const top = el.getBoundingClientRect().top;
+        if (top - mark <= 0) current = id; else break;
+      }
+      setActive(current);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); };
+  }, [hrefs.join('|')]);
+  return active;
+}
 
 function Header() {
   const [scrolled, setScrolled] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   const isMobile = useIsMobile(1120);
+  const NAV = navItems(useSections());
+  const active = useScrollSpy(NAV.map(n => n.href));
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -41,7 +81,10 @@ function Header() {
 
         {!isMobile && (
           <nav style={hs.nav}>
-            {NAV.map(n => <a key={n.href} href={n.href} style={hs.navLink}>{n.label}</a>)}
+            {NAV.map(n => {
+              const on = active === n.href.replace('#', '');
+              return <a key={n.href} href={n.href} style={{ ...hs.navLink, ...(on ? hs.navLinkActive : {}) }}>{n.label}</a>;
+            })}
           </nav>
         )}
 
@@ -58,7 +101,10 @@ function Header() {
       </div>
       {open && isMobile && (
         <div style={hs.mobileMenu}>
-          {NAV.map(n => <a key={n.href} href={n.href} style={hs.mobileLink} onClick={() => setOpen(false)}>{n.label}</a>)}
+          {NAV.map(n => {
+            const on = active === n.href.replace('#', '');
+            return <a key={n.href} href={n.href} style={{ ...hs.mobileLink, ...(on ? hs.navLinkActive : {}) }} onClick={() => setOpen(false)}>{n.label}</a>;
+          })}
           <a className="btn btn-primary" href={window.GB.MAX_LINK} target="_blank" rel="noopener" style={{ marginTop: 8 }} onClick={() => setOpen(false)}>
             <span className="max-glyph"></span> Заказать в MAX
           </a>
@@ -70,6 +116,56 @@ function Header() {
     </header>
   );
 }
+
+/* Кнопка «КАЛЬКУЛЯТОР» над фото дома: наведение/клик → выбор Газоблок / Кирпич / Бетон */
+function CalcMenu() {
+  const [open, setOpen] = React.useState(false);
+  const sec = useSections();
+  const items = [
+    { href: '#calc',       label: 'Газоблок', d: 'блоки, поддоны, клей', sec: 'calc' },
+    { href: '#brick-calc', label: 'Кирпич',   d: 'облицовка фасада',   sec: 'bricks' },
+    { href: '#beton',      label: 'Бетон',    d: 'кубы и миксеры',       sec: 'beton' },
+  ].filter(i => sec[i.sec] !== false);
+  if (!items.length) return null;
+  return (
+    <div style={cm.row} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <div style={cm.anchor}>
+        <button type="button" style={cm.btn} onClick={() => setOpen(o => !o)} aria-expanded={open} aria-haspopup="true">
+          <span style={cm.icon}>▦</span>
+          КАЛЬКУЛЯТОР
+          <span style={{ ...cm.chev, transform: open ? 'rotate(180deg)' : 'none' }}>▾</span>
+        </button>
+        {open && (
+          <div style={cm.drop}>
+            <div className="card" style={cm.menu}>
+              {items.map(i => (
+                <a key={i.href} href={i.href} style={cm.item} onClick={() => setOpen(false)}>
+                  <span style={cm.itemLabel}>{i.label}</span>
+                  <span style={cm.itemD}>{i.d}</span>
+                  <span style={cm.itemArrow}>→</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const cm = {
+  row: { display: 'flex', justifyContent: 'flex-end', marginTop: -10, marginBottom: 20 },
+  anchor: { position: 'relative', zIndex: 40 },
+  btn: { display: 'inline-flex', alignItems: 'center', gap: 10, padding: '13px 20px', borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'var(--on-accent, #fff)', fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 800, letterSpacing: '.04em', cursor: 'pointer', boxShadow: 'var(--shadow-md)' },
+  icon: { fontSize: 14, opacity: .9 },
+  chev: { fontSize: 13, transition: 'transform .18s ease', display: 'inline-block' },
+  drop: { position: 'absolute', top: '100%', right: 0, paddingTop: 8, minWidth: 250 },
+  menu: { display: 'flex', flexDirection: 'column', padding: 8, boxShadow: 'var(--shadow-lg)', background: 'var(--surface)' },
+  item: { display: 'grid', gridTemplateColumns: '1fr auto', gridTemplateRows: 'auto auto', columnGap: 10, alignItems: 'center', padding: '11px 13px', borderRadius: 9, color: 'var(--ink)', transition: 'background .12s ease' },
+  itemLabel: { fontSize: 15.5, fontWeight: 700, gridRow: 1 },
+  itemD: { fontSize: 12, color: 'var(--ink-3)', gridRow: 2, gridColumn: 1 },
+  itemArrow: { gridRow: '1 / span 2', gridColumn: 2, fontSize: 16, color: 'var(--accent-ink)' },
+};
 
 function Hero({ showMarquee = true }) {
   const isMobile = useIsMobile();
@@ -104,7 +200,8 @@ function Hero({ showMarquee = true }) {
         </div>
 
         <div style={{ ...ho.right, display: isMobile ? 'none' : 'block' }}>
-          <img src="assets/hero-house-illustration.png" alt="Современный дом из газоблока ГРАС" style={{ ...ho.heroImg, height: 'auto', display: 'block', objectFit: 'cover', borderRadius: 14 }} />
+          <CalcMenu />
+          <img src={window.GB.HERO_IMG || "assets/hero-house-illustration.png"} alt="Современный дом из газоблока ГРАС" style={{ ...ho.heroImg, height: 'auto', display: 'block', objectFit: 'cover', borderRadius: 14 }} onError={(e) => { if (e.currentTarget.dataset.fb !== '1') { e.currentTarget.dataset.fb = '1'; e.currentTarget.src = 'assets/hero-house-illustration.png'; } }} />
           <div className="card" style={ho.floatCard}>
             <div style={ho.floatAvatar}>
               <img src="assets/slots/author-avatar.webp" alt="Автор канала" style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover' }} />
@@ -140,7 +237,7 @@ function OrderForm() {
   const [msg, setMsg] = React.useState('');
   const [sent, setSent] = React.useState(false);
 
-  const NEEDS = ['Газоблок для дома', 'Помощь с расчётом', 'Готовый проект', 'Пено-клей и материалы', 'Другое'];
+  const NEEDS = ['Газоблок для дома', 'Бетон', 'ЖБИ', 'Помощь с расчётом', 'Готовый проект', 'Пено-клей и материалы', 'Другое'];
 
   const submit = (e) => {
     e.preventDefault();
@@ -246,6 +343,7 @@ function OrderForm() {
 }
 
 function Footer() {
+  const NAV = navItems(useSections());
   return (
     <footer style={fo.wrap}>
       <div className="wrap">
@@ -371,6 +469,7 @@ const hs = {
   logoText: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, letterSpacing: '-0.02em' },
   nav: { display: 'flex', gap: 18, alignItems: 'center' },
   navLink: { fontSize: 15, fontWeight: 500, color: 'var(--ink-2)', transition: 'color .15s ease' },
+  navLinkActive: { color: '#d12b2b', fontWeight: 700 },
   right: { display: 'flex', alignItems: 'center', gap: 14 },
   burger: { display: 'none', flexDirection: 'column', gap: 4, width: 38, height: 38, border: '1px solid var(--line)', borderRadius: 9, background: 'var(--surface)', cursor: 'pointer', alignItems: 'center', justifyContent: 'center' },
   burgerLine: { width: 17, height: 2, background: 'var(--ink)', borderRadius: 2, transition: 'all .2s ease' },
@@ -396,7 +495,7 @@ const ho = {
   heroImg: { aspectRatio: '4/5', width: '100%', boxShadow: 'var(--shadow-lg)' },
   floatCard: { position: 'absolute', left: -22, bottom: 34, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px 12px 12px', borderRadius: 14 },
   floatAvatar: { width: 44, height: 44, borderRadius: 999, overflow: 'hidden', flex: 'none' },
-  playBadge: { position: 'absolute', right: -18, top: 28, padding: '12px 18px', borderRadius: 14, textAlign: 'right' },
+  playBadge: { position: 'absolute', right: -18, top: 96, padding: '12px 18px', borderRadius: 14, textAlign: 'right' },
 
   marqueeWrap: { marginTop: 'clamp(32px,5vw,56px)', overflow: 'hidden', maskImage: 'linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)' },
   marquee: { display: 'flex', gap: 40, animation: 'gbmarquee 32s linear infinite', whiteSpace: 'nowrap', width: 'max-content' },
@@ -448,4 +547,4 @@ const fo = {
   bottom: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 24, fontSize: 13, flexWrap: 'wrap', gap: 10 },
 };
 
-Object.assign(window, { Header, Hero, OrderForm, Footer, useIsMobile });
+Object.assign(window, { Header, Hero, OrderForm, Footer, useIsMobile, useSections });

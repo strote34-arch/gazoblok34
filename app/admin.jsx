@@ -13,9 +13,13 @@ const uid = () => Date.now() + Math.floor(Math.random() * 1000);
 const deep = (o) => JSON.parse(JSON.stringify(o));
 
 const TABS = [
+  { id: "sections", label: "Разделы", icon: "▤" },
   { id: "contacts", label: "Контакты", icon: "☎" },
   { id: "socials",  label: "Соцсети",  icon: "◎" },
   { id: "products", label: "Продукция", icon: "▦" },
+  { id: "bricks",   label: "Кирпич",    icon: "▥" },
+  { id: "beton",    label: "Бетон",     icon: "◆" },
+  { id: "gbi",      label: "ЖБИ",       icon: "▣" },
   { id: "videos",   label: "Видео",     icon: "▶" },
   { id: "articles", label: "Статьи",    icon: "✎" },
   { id: "projects", label: "Проекты",   icon: "⌂" },
@@ -44,6 +48,46 @@ function NumIn({ value, onChange }) {
 function AreaIn({ value, onChange, placeholder, rows = 4 }) {
   return <textarea style={{ ...af.input, minHeight: rows * 24, resize: 'vertical', lineHeight: 1.5 }} value={value ?? ''}
     placeholder={placeholder} onChange={e => onChange(e.target.value)} />;
+}
+
+/* Фото: загрузка с компьютера → уменьшается и хранится вместе с контентом */
+function ImageField({ value, onChange, label = "Фото" }) {
+  const inputRef = useRef(null);
+  const onFile = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 900;
+      const k = Math.min(1, MAX / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      onChange(c.toDataURL('image/jpeg', 0.82));
+      URL.revokeObjectURL(url);
+      if (inputRef.current) inputRef.current.value = '';
+    };
+    img.src = url;
+  };
+  return (
+    <div style={{ ...af.field, gridColumn: '1 / -1' }}>
+      <span style={af.label}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ width: 96, height: 72, borderRadius: 9, border: '1px solid var(--line)', background: 'var(--surface-2)', overflow: 'hidden', display: 'grid', placeItems: 'center', flex: 'none' }}>
+          {value
+            ? <img src={value} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            : <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>нет фото</span>}
+        </div>
+        <label style={{ ...af.addBtnSm, display: 'inline-block', cursor: 'pointer' }}>
+          {value ? 'Заменить фото' : 'Загрузить фото'}
+          <input ref={inputRef} type="file" accept="image/*" onChange={onFile} style={{ display: 'none' }} />
+        </label>
+        {value && <button style={{ ...af.iconBtn, ...af.del, width: 'auto', padding: '0 12px' }} onClick={() => onChange('')}>Убрать</button>}
+      </div>
+      <span style={af.hint}>JPG/PNG — сайт сам уменьшит и сохранит. «Убрать» вернёт стандартное изображение.</span>
+    </div>
+  );
 }
 
 /* ---------- item card wrapper ---------- */
@@ -75,6 +119,12 @@ function ContactsEditor({ data, set }) {
   const delPhone = (i) => set(d => { d.CONTACTS.phones.splice(i, 1); });
   return (
     <div style={af.stack}>
+      <div style={af.item}>
+        <div style={af.itemHead}><div style={af.itemTitle}><span>Главный экран</span></div></div>
+        <div className="adm-grid2" style={af.grid2}>
+          <ImageField label="Фото дома под шапкой (справа от заголовка)" value={data.HERO_IMG} onChange={v => set(d => { d.HERO_IMG = v; })} />
+        </div>
+      </div>
       <div style={af.item}>
         <div style={af.itemHead}><div style={af.itemTitle}><span>Телефоны</span></div>
           <button style={af.addBtnSm} onClick={addPhone}>+ телефон</button></div>
@@ -134,6 +184,7 @@ function ProductsEditor({ data, set }) {
           canUp={i > 0} canDown={i < list.length - 1}
           onUp={() => move(set, 'PRODUCTS', i, -1)} onDown={() => move(set, 'PRODUCTS', i, 1)}
           onRemove={() => set(d => { d.PRODUCTS.splice(i, 1); })}>
+          <ImageField label="Фото блока" value={p.img} onChange={v => set(d => { d.PRODUCTS[i].img = v; })} />
           <Field label="Название"><TextIn value={p.name} onChange={v => set(d => { d.PRODUCTS[i].name = v; })} /></Field>
           <Field label="Бейдж" hint="напр. Хит, Тёплый"><TextIn value={p.badge} onChange={v => set(d => { d.PRODUCTS[i].badge = v; })} /></Field>
           <Field label="Плотность"><TextIn value={p.density} onChange={v => set(d => { d.PRODUCTS[i].density = v; })} /></Field>
@@ -206,6 +257,7 @@ function ProjectsEditor({ data, set }) {
           canUp={i > 0} canDown={i < list.length - 1}
           onUp={() => move(set, 'PROJECTS', i, -1)} onDown={() => move(set, 'PROJECTS', i, 1)}
           onRemove={() => set(d => { d.PROJECTS.splice(i, 1); })}>
+          <ImageField label="Фото проекта" value={p.img} onChange={v => set(d => { d.PROJECTS[i].img = v; })} />
           <Field label="Название"><TextIn value={p.name} onChange={v => set(d => { d.PROJECTS[i].name = v; })} /></Field>
           <Field label="Этажность"><TextIn value={p.floors} onChange={v => set(d => { d.PROJECTS[i].floors = v; })} /></Field>
           <Field label="Площадь, м²"><NumIn value={p.area} onChange={v => set(d => { d.PROJECTS[i].area = v; })} /></Field>
@@ -236,6 +288,140 @@ function AnalyticsEditor({ data, set }) {
           Чтобы отключить — очистите поле.
         </p>
       </div>
+    </div>
+  );
+}
+
+/* ---------- Разделы: вкл/выкл участков сайта ---------- */
+const ADMIN_SECTIONS = [
+  { k: 'calc',     label: 'Калькулятор газоблока' },
+  { k: 'products', label: 'Газоблок (продукция)' },
+  { k: 'bricks',   label: 'Кирпич (калькулятор + каталог)' },
+  { k: 'beton',    label: 'Бетон' },
+  { k: 'gbi',      label: 'ЖБИ' },
+  { k: 'video',    label: 'Видео' },
+  { k: 'articles', label: 'Статьи' },
+  { k: 'projects', label: 'Проекты' },
+  { k: 'delivery', label: 'Доставка' },
+  { k: 'faq',      label: 'Вопросы' },
+];
+function SectionsEditor({ data, set }) {
+  const s = data.SECTIONS || {};
+  const toggle = (k) => set(d => { if (!d.SECTIONS) d.SECTIONS = {}; d.SECTIONS[k] = !(d.SECTIONS[k] !== false); });
+  return (
+    <div style={af.stack}>
+      <div style={af.item}>
+        <div style={af.itemHead}><div style={af.itemTitle}><span>Разделы сайта</span></div></div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {ADMIN_SECTIONS.map(it => {
+            const on = s[it.k] !== false;
+            return (
+              <button key={it.k} type="button" onClick={() => toggle(it.k)}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, padding: '12px 2px', background: 'none', border: 'none', borderBottom: '1px solid var(--line)', cursor: 'pointer', font: 'inherit', width: '100%', textAlign: 'left' }}>
+                <span style={{ fontSize: 15, fontWeight: 600, color: on ? 'var(--ink)' : 'var(--ink-3)' }}>{it.label}</span>
+                <span style={{ width: 42, height: 24, borderRadius: 999, background: on ? 'var(--accent)' : 'var(--line)', position: 'relative', flex: 'none', transition: 'background .15s ease', display: 'inline-block' }}>
+                  <span style={{ position: 'absolute', top: 3, left: 3, width: 18, height: 18, borderRadius: 999, background: '#fff', transition: 'transform .15s ease', display: 'block', transform: on ? 'translateX(18px)' : 'translateX(0)' }}></span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.55, marginTop: 12 }}>
+          Выключенный раздел пропадает с главной страницы и из меню. Не забудьте нажать «Сохранить».
+          Такая же кнопка «Разделы» появляется внизу слева на самом сайте, пока вы вошли в админку.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Бетон ---------- */
+function BetonEditor({ data, set }) {
+  const b = data.BETON || { GRADES: [] };
+  const addGrade = () => set(d => { d.BETON.GRADES.push({ id: 'g' + uid(), name: 'М200', cls: 'B15', use: '', price: 5000 }); });
+  return (
+    <div style={af.stack}>
+      <div style={af.item}>
+        <div style={af.itemHead}><div style={af.itemTitle}><span>Ссылки для заказа бетона</span></div></div>
+        <div className="adm-grid2" style={af.grid2}>
+          <Field label="Telegram (заказ расчёта)" wide hint="Кнопка «Заказать расчёт в Telegram»"><TextIn value={b.TG_LINK} onChange={v => set(d => { d.BETON.TG_LINK = v; })} mono /></Field>
+          <Field label="Подпись Telegram" hint="напр. @beribeton034"><TextIn value={b.TG_LABEL} onChange={v => set(d => { d.BETON.TG_LABEL = v; })} mono /></Field>
+          <Field label="Объём миксера, м³"><NumIn value={b.mixerM3} onChange={v => set(d => { d.BETON.mixerM3 = v; })} /></Field>
+          <Field label="Ссылка MAX (заказ)" wide><TextIn value={b.MAX_LINK} onChange={v => set(d => { d.BETON.MAX_LINK = v; })} mono /></Field>
+          <Field label="Ссылка MAX — запасная" wide><TextIn value={b.MAX_LINK2} onChange={v => set(d => { d.BETON.MAX_LINK2 = v; })} mono /></Field>
+          <Field label="Описание раздела" wide><AreaIn rows={3} value={b.intro} onChange={v => set(d => { d.BETON.intro = v; })} /></Field>
+        </div>
+      </div>
+      {(b.GRADES || []).map((g, i) => (
+        <ItemCard key={g.id || i} badge={i + 1} title={`${g.name} · ${g.cls}`}
+          canUp={i > 0} canDown={i < b.GRADES.length - 1}
+          onUp={() => set(d => { const a = d.BETON.GRADES; const t = a[i]; a[i] = a[i-1]; a[i-1] = t; })}
+          onDown={() => set(d => { const a = d.BETON.GRADES; const t = a[i]; a[i] = a[i+1]; a[i+1] = t; })}
+          onRemove={() => set(d => { d.BETON.GRADES.splice(i, 1); })}>
+          <ImageField label="Фото (необязательно — без фото карточка остаётся как сейчас)" value={g.img} onChange={v => set(d => { d.BETON.GRADES[i].img = v; })} />
+          <Field label="Марка"><TextIn value={g.name} onChange={v => set(d => { d.BETON.GRADES[i].name = v; })} /></Field>
+          <Field label="Класс"><TextIn value={g.cls} onChange={v => set(d => { d.BETON.GRADES[i].cls = v; })} /></Field>
+          <Field label="Цена, ₽/м³"><NumIn value={g.price} onChange={v => set(d => { d.BETON.GRADES[i].price = v; })} /></Field>
+          <Field label="Бейдж" hint="напр. Хит"><TextIn value={g.badge} onChange={v => set(d => { d.BETON.GRADES[i].badge = v; })} /></Field>
+          <Field label="Применение" wide><TextIn value={g.use} onChange={v => set(d => { d.BETON.GRADES[i].use = v; })} /></Field>
+        </ItemCard>
+      ))}
+      <button style={af.addBtn} onClick={addGrade}>+ марка бетона</button>
+    </div>
+  );
+}
+
+/* ---------- ЖБИ ---------- */
+function GbiEditor({ data, set }) {
+  const list = data.GBI || [];
+  const add = () => set(d => { d.GBI.push({ id: 'g' + uid(), name: 'Новое изделие', cat: 'Блоки ФБС', size: '', weight: 0, price: 0, note: '' }); });
+  return (
+    <div style={af.stack}>
+      <div style={af.item}>
+        <div className="adm-grid2" style={af.grid2}>
+          <Field label="Ссылка на каталог завода" wide hint="Кнопка «Весь каталог завода»"><TextIn value={data.GBI_URL} onChange={v => set(d => { d.GBI_URL = v; })} mono /></Field>
+        </div>
+      </div>
+      {list.map((g, i) => (
+        <ItemCard key={g.id} badge={i + 1} title={g.name}
+          canUp={i > 0} canDown={i < list.length - 1}
+          onUp={() => move(set, 'GBI', i, -1)} onDown={() => move(set, 'GBI', i, 1)}
+          onRemove={() => set(d => { d.GBI.splice(i, 1); })}>
+          <ImageField label="Фото изделия" value={g.img} onChange={v => set(d => { d.GBI[i].img = v; })} />
+          <Field label="Название"><TextIn value={g.name} onChange={v => set(d => { d.GBI[i].name = v; })} /></Field>
+          <Field label="Категория" hint="напр. Блоки ФБС, Перемычки"><TextIn value={g.cat} onChange={v => set(d => { d.GBI[i].cat = v; })} /></Field>
+          <Field label="Размер, мм"><TextIn value={g.size} onChange={v => set(d => { d.GBI[i].size = v; })} mono /></Field>
+          <Field label="Вес, кг/шт"><NumIn value={g.weight} onChange={v => set(d => { d.GBI[i].weight = v; })} /></Field>
+          <Field label="Цена, ₽/шт"><NumIn value={g.price} onChange={v => set(d => { d.GBI[i].price = v; })} /></Field>
+          <Field label="Описание" wide><AreaIn rows={2} value={g.note} onChange={v => set(d => { d.GBI[i].note = v; })} /></Field>
+        </ItemCard>
+      ))}
+      <button style={af.addBtn} onClick={add}>+ изделие ЖБИ</button>
+    </div>
+  );
+}
+
+/* ---------- Кирпич ---------- */
+function BricksEditor({ data, set }) {
+  const list = data.BRICKS || [];
+  const add = () => set(d => { d.BRICKS.push({ id: 'b' + uid(), name: 'Новый кирпич', color: '', format: '1НФ', size: '250 × 120 × 65', pricePerPc: 0, note: '' }); });
+  return (
+    <div style={af.stack}>
+      {list.map((b, i) => (
+        <ItemCard key={b.id} badge={i + 1} title={b.name}
+          canUp={i > 0} canDown={i < list.length - 1}
+          onUp={() => move(set, 'BRICKS', i, -1)} onDown={() => move(set, 'BRICKS', i, 1)}
+          onRemove={() => set(d => { d.BRICKS.splice(i, 1); })}>
+          <ImageField label="Фото кирпича" value={b.img} onChange={v => set(d => { d.BRICKS[i].img = v; })} />
+          <Field label="Название"><TextIn value={b.name} onChange={v => set(d => { d.BRICKS[i].name = v; })} /></Field>
+          <Field label="Цвет"><TextIn value={b.color} onChange={v => set(d => { d.BRICKS[i].color = v; })} /></Field>
+          <Field label="Формат"><TextIn value={b.format} onChange={v => set(d => { d.BRICKS[i].format = v; })} /></Field>
+          <Field label="Размер, мм"><TextIn value={b.size} onChange={v => set(d => { d.BRICKS[i].size = v; })} mono /></Field>
+          <Field label="Цена, ₽/шт"><NumIn value={b.pricePerPc} onChange={v => set(d => { d.BRICKS[i].pricePerPc = v; })} /></Field>
+          <Field label="Описание" wide><AreaIn rows={2} value={b.note} onChange={v => set(d => { d.BRICKS[i].note = v; })} /></Field>
+        </ItemCard>
+      ))}
+      <button style={af.addBtn} onClick={add}>+ кирпич</button>
     </div>
   );
 }
@@ -306,7 +492,8 @@ function Admin({ onLogout }) {
   }, [dirty]);
 
   const Editor = {
-    contacts: ContactsEditor, socials: SocialsEditor, products: ProductsEditor,
+    sections: SectionsEditor, contacts: ContactsEditor, socials: SocialsEditor, products: ProductsEditor,
+    bricks: BricksEditor, beton: BetonEditor, gbi: GbiEditor,
     videos: VideosEditor, articles: ArticlesEditor, projects: ProjectsEditor, faq: FaqEditor, analytics: AnalyticsEditor,
   }[tab];
   const active = TABS.find(t => t.id === tab);
@@ -363,7 +550,7 @@ function Admin({ onLogout }) {
 }
 
 function mapKey(tab) {
-  return { socials: 'SOCIALS', products: 'PRODUCTS', videos: 'VIDEOS', articles: 'ARTICLES', projects: 'PROJECTS', faq: 'FAQ' }[tab] || '';
+  return { socials: 'SOCIALS', products: 'PRODUCTS', bricks: 'BRICKS', gbi: 'GBI', videos: 'VIDEOS', articles: 'ARTICLES', projects: 'PROJECTS', faq: 'FAQ' }[tab] || '';
 }
 
 /* ---------- styles ---------- */
@@ -425,6 +612,7 @@ function Gate({ onOk }) {
     e.preventDefault();
     if (val === ADMIN_PASSWORD) {
       try { sessionStorage.setItem('gb_admin_ok', '1'); } catch (e) {}
+      try { localStorage.setItem('gb_admin_on', '1'); } catch (e) {}
       onOk();
     } else {
       setErr(true);
@@ -467,7 +655,7 @@ function Root() {
   const [ok, setOk] = useState(() => {
     try { return sessionStorage.getItem('gb_admin_ok') === '1'; } catch (e) { return false; }
   });
-  return ok ? <Admin onLogout={() => { try { sessionStorage.removeItem('gb_admin_ok'); } catch (e) {} setOk(false); }} /> : <Gate onOk={() => setOk(true)} />;
+  return ok ? <Admin onLogout={() => { try { sessionStorage.removeItem('gb_admin_ok'); } catch (e) {} try { localStorage.removeItem('gb_admin_on'); } catch (e) {} setOk(false); }} /> : <Gate onOk={() => setOk(true)} />;
 }
 
 ReactDOM.createRoot(document.getElementById('admin-root')).render(<Root />);

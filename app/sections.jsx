@@ -204,7 +204,7 @@ function Projects() {
         <div style={prs.grid}>
           {window.GB.PROJECTS.map(p => (
             <article key={p.id} className="card" style={prs.card}>
-              <img src={`assets/slots/project-${p.id}.webp`} alt={`Проект «${p.name}»`} loading="lazy" style={{ ...prs.thumb, width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = 'assets/gras-block.jpg'; }} />
+              <img src={p.img || `assets/slots/project-${p.id}.webp`} alt={`Проект «${p.name}»`} loading="lazy" style={{ ...prs.thumb, width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = 'assets/gras-block.jpg'; }} />
               <div style={prs.body}>
                 <div style={prs.headRow}>
                   <h3 style={prs.name}>«{p.name}»</h3>
@@ -250,7 +250,7 @@ function ProjectModal() {
       <article className="gb-modal-sheet" style={am.sheet} onClick={e => e.stopPropagation()}>
         <button style={am.close} onClick={close} aria-label="Закрыть">×</button>
         <div style={am.scroll}>
-          <img src={`assets/slots/projectbig-${p.id}.webp`} alt={`Проект «${p.name}»`} style={{ width: '100%', height: 'auto', aspectRatio: '16/9', display: 'block', borderRadius: 14, marginBottom: 22, objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = `assets/slots/project-${p.id}.webp`; }} />
+          <img src={p.img || `assets/slots/projectbig-${p.id}.webp`} alt={`Проект «${p.name}»`} style={{ width: '100%', height: 'auto', aspectRatio: '16/9', display: 'block', borderRadius: 14, marginBottom: 22, objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = `assets/slots/project-${p.id}.webp`; }} />
           <div style={am.headMeta}>
             <span className="chip chip--accent">Проект «{p.name}»</span>
             <span className="mono" style={am.mins}>{p.floors}</span>

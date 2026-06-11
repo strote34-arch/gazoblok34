@@ -43,7 +43,7 @@ function BrickCatalog() {
         <div style={{ width: 'var(--gutter)', flex: 'none' }}></div>
         {window.GB.BRICKS.map(b => (
           <article key={b.id} className="card" style={brc.card}>
-            <img src={`assets/slots/brick-${b.id}.webp`} alt={b.name} loading="lazy" style={{ ...brc.thumb, display: 'block', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = 'assets/gras-block.jpg'; }} />
+            <img src={b.img || `assets/slots/brick-${b.id}.webp`} alt={b.name} loading="lazy" style={{ ...brc.thumb, display: 'block', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = 'assets/gras-block.jpg'; }} />
             <div style={brc.body}>
               <div style={brc.cardHead}>
                 <h3 style={brc.name}>{b.name}</h3>
