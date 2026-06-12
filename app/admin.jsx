@@ -271,7 +271,7 @@ function ProjectsEditor({ data, set }) {
 }
 
 function AnalyticsEditor({ data, set }) {
-  const a = data.ANALYTICS || { yandexId: '' };
+  const a = data.ANALYTICS || { yandexId: '', googleId: '' };
   return (
     <div style={af.stack}>
       <div style={af.item}>
@@ -286,6 +286,18 @@ function AnalyticsEditor({ data, set }) {
           Как подключить: зарегистрируйтесь на metrika.yandex.ru, создайте счётчик для адреса gazoblok34.ru,
           скопируйте его <b>номер</b> и вставьте сюда. Вставлять весь код не нужно — сайт подключит счётчик сам.
           Чтобы отключить — очистите поле.
+        </p>
+      </div>
+      <div style={af.item}>
+        <div style={af.itemHead}><div style={af.itemTitle}><span>Google Analytics</span></div></div>
+        <div style={af.grid2}>
+          <Field label="Идентификатор (G-…)" wide
+            hint="Вида G-N3F6QCZ55B. Найдёте в analytics.google.com → Администратор → Потоки данных.">
+            <TextIn value={a.googleId} onChange={v => set(d => { if (!d.ANALYTICS) d.ANALYTICS = {}; d.ANALYTICS.googleId = v.trim(); })} placeholder="напр. G-N3F6QCZ55B" mono />
+          </Field>
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--ink-3)', lineHeight: 1.55, marginTop: 4 }}>
+          Счётчик Google (gtag.js) подключается автоматически, как и Метрика. Чтобы отключить — очистите поле.
         </p>
       </div>
     </div>
