@@ -23,9 +23,11 @@ const GB_DEFAULTS = {
     supplier: "Завод газобетона ГРАС",
   },
 
-  /* --- Аналитика. yandexId — номер счётчика Яндекс.Метрики (только цифры). --- */
+  /* --- Аналитика. yandexId — номер счётчика Яндекс.Метрики (только цифры),
+     googleId — идентификатор Google Analytics (вида G-XXXXXXXXXX). --- */
   ANALYTICS: {
     yandexId: "109796557",
+    googleId: "G-N3F6QCZ55B",
   },
 
   /* --- Socials --- */
@@ -397,5 +399,24 @@ window.gbInitMetrika = function () {
     ns.innerHTML = '<div><img src="https://mc.yandex.ru/watch/' + id +
       '" style="position:absolute;left:-9999px;" alt="" /></div>';
     document.body.appendChild(ns);
+  } catch (e) { /* ignore */ }
+
+  /* ---------- Google Analytics (gtag.js) ---------- */
+  try {
+    const gid = (window.GB && window.GB.ANALYTICS && String(window.GB.ANALYTICS.googleId || '').trim()) || '';
+    if (!/^G-[A-Z0-9]{6,}$/i.test(gid)) return;   // нет валидного идентификатора — выходим
+    if (window.__gbGtagDone) return;
+    window.__gbGtagDone = true;
+
+    const s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gid;
+    document.head.appendChild(s);
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { window.dataLayer.push(arguments); }
+    window.gtag = window.gtag || gtag;
+    window.gtag('js', new Date());
+    window.gtag('config', gid);
   } catch (e) { /* ignore */ }
 };
