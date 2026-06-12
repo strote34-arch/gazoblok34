@@ -1,6 +1,45 @@
 /* Бетон «Бери Бетон 34» + ЖБИ «ПростоЖБИ»: каталоги, калькуляторы, заказ в Telegram/MAX */
 const fmt3 = (n) => new Intl.NumberFormat('ru-RU').format(n);
 
+/* Мини-форма заявки: имя + телефон → в Telegram текст подставляется в чат,
+   в MAX — копируется в буфер (остаётся вставить). Менеджер видит источник «gazoblok34.ru». */
+function LeadForm({ tgLink, maxLink, summary }) {
+  const [nm, setNm] = React.useState('');
+  const [ph, setPh] = React.useState('');
+  const [copied, setCopied] = React.useState(false);
+  const text = `Заявка с сайта gazoblok34.ru\nИмя: ${nm.trim() || '—'}\nТелефон: ${ph.trim() || '—'}\n${summary}`;
+  const tgHref = `${tgLink}?text=${encodeURIComponent(text)}`;
+  const copyText = () => {
+    try { navigator.clipboard.writeText(text); } catch (e) {}
+    setCopied(true);
+    setTimeout(() => setCopied(false), 4000);
+  };
+  return (
+    <div>
+      <div style={lf.row}>
+        <input style={lf.input} type="text" placeholder="Имя" value={nm} onChange={(e) => setNm(e.target.value)} />
+        <input style={lf.input} type="tel" placeholder="Телефон" value={ph} onChange={(e) => setPh(e.target.value)} />
+      </div>
+      <a className="btn btn-lg" style={bt.tgBtn} href={tgHref} target="_blank" rel="noopener" onClick={copyText}>
+        ✈ Заказать расчёт в Telegram
+      </a>
+      <a className="btn btn-ghost btn-lg" style={bt.maxBtn} href={maxLink} target="_blank" rel="noopener" onClick={copyText}>
+        <span className="max-glyph"></span> Заказ на MAX
+      </a>
+      <p style={{ ...bt.resFoot, marginTop: 10, color: copied ? 'var(--on-accent)' : bt.resFoot.color }}>
+        {copied
+          ? '✓ Текст заявки скопирован — в чате просто вставьте и отправьте.'
+          : 'Заполните имя и телефон — в сообщение подставится заявка с расчётом и пометкой «с сайта gazoblok34.ru».'}
+      </p>
+    </div>
+  );
+}
+
+const lf = {
+  row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 20 },
+  input: { width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid oklch(1 0 0 / 0.22)', background: 'oklch(1 0 0 / 0.08)', color: 'var(--on-accent)', fontSize: 15, fontFamily: 'var(--font-body)', outline: 'none', minWidth: 0 },
+};
+
 /* ===========================================================
    БЕТОН — марки + калькулятор объёма. Заказ расчёта в Telegram,
    заказ в MAX (ссылки в GB.BETON, правятся в админке).
@@ -132,12 +171,8 @@ function BetonSection() {
               <div style={bt.resCell}><div style={bt.resCellV}>{r.mixers}</div><div style={bt.resCellU}>миксер(ов)</div></div>
               <div style={bt.resCell}><div style={bt.resCellV}>{fmt3(r.cost)} ₽</div><div style={bt.resCellU}>ориентир, без доставки</div></div>
             </div>
-            <a className="btn btn-lg" style={bt.tgBtn} href={B.TG_LINK} target="_blank" rel="noopener">
-              ✈ Заказать расчёт в Telegram
-            </a>
-            <a className="btn btn-ghost btn-lg" style={bt.maxBtn} href={B.MAX_LINK} target="_blank" rel="noopener">
-              <span className="max-glyph"></span> Заказ на MAX
-            </a>
+            <LeadForm tgLink={B.TG_LINK} maxLink={B.MAX_LINK}
+              summary={`Бетон ${g.name} (${g.cls}) · ${fmt3(r.v2)} м³ · ~${r.mixers} миксер(ов) · ориентир ${fmt3(r.cost)} ₽`} />
             <p style={bt.resFoot}>Цены ориентировочные, без доставки. Напишите в Telegram {B.TG_LABEL} — подберу марку и посчитаю точно с доставкой.</p>
           </div>
         </div>
@@ -274,12 +309,8 @@ function GbiSection() {
               <div style={bt.resCell}><div style={bt.resCellV}>{fmt3(r.tons)}</div><div style={bt.resCellU}>тонн</div></div>
               <div style={bt.resCell}><div style={bt.resCellV}>~{r.trucks}</div><div style={bt.resCellU}>машин (20 т)</div></div>
             </div>
-            <a className="btn btn-lg" style={bt.tgBtn} href={window.GB.BETON.TG_LINK} target="_blank" rel="noopener">
-              ✈ Заказать расчёт в Telegram
-            </a>
-            <a className="btn btn-ghost btn-lg" style={bt.maxBtn} href={window.GB.BETON.MAX_LINK} target="_blank" rel="noopener">
-              <span className="max-glyph"></span> Заказ на MAX
-            </a>
+            <LeadForm tgLink={window.GB.BETON.TG_LINK} maxLink={window.GB.BETON.MAX_LINK}
+              summary={`ЖБИ: ${g.name} · ${fmt3(qty)} шт · ${fmt3(r.tons)} т · ориентир ${fmt3(r.cost)} ₽`} />
             <p style={bt.resFoot}>Цены ориентировочные по прайсу завода — актуальные уточню при заказе. Доставка по Волгограду и области.</p>
           </div>
         </div>

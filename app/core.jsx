@@ -244,9 +244,10 @@ function OrderForm() {
   const submit = (e) => {
     e.preventDefault();
     const text =
-      `Заявка с сайта gazoblok34.ru:%0A` +
-      `Имя: ${name || '—'}%0AТелефон: ${phone || '—'}%0AЗапрос: ${need}%0A` +
-      (msg ? `Комментарий: ${msg}%0A` : '');
+      `Заявка с сайта gazoblok34.ru\n` +
+      `Имя: ${name || '—'}\nТелефон: ${phone || '—'}\nЗапрос: ${need}\n` +
+      (msg ? `Комментарий: ${msg}\n` : '');
+    try { navigator.clipboard.writeText(text); } catch (err) {}
     window.open(`${window.GB.MAX_LINK}`, '_blank');
     setSent(true);
   };
@@ -301,7 +302,8 @@ function OrderForm() {
               <div style={of.successMark}>✓</div>
               <h3 style={{ fontSize: 24 }}>Заявка собрана</h3>
               <p className="muted" style={{ fontSize: 15 }}>
-                Открыл для вас MAX — отправьте сообщение, и я отвечу с расчётом.
+                Открыл для вас MAX. Текст заявки (имя, телефон, запрос и пометка «с сайта gazoblok34.ru»)
+                уже скопирован — просто вставьте его в чат и отправьте.
                 Не открылся? Напишите напрямую.
               </p>
               <a className="btn btn-dark" href={window.GB.MAX_LINK} target="_blank" rel="noopener">
