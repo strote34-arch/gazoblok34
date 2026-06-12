@@ -15,7 +15,10 @@
 """
 
 import os
+import json
+import asyncio
 import logging
+import urllib.request
 from telegram import (
     Update,
     ReplyKeyboardMarkup,
@@ -39,6 +42,31 @@ from telegram.ext import (
 # ============================================================
 BOT_TOKEN = os.environ.get("GB_BOT_TOKEN", "8840104364:AAHrRb6w6ACanyQ04ZzyonFDD9ITh6neETs")
 ADMIN_CHAT_ID = int(os.environ.get("GB_ADMIN_CHAT_ID", "69970857"))  # ← ВПИШИТЕ ваш Telegram ID числом вместо 0, напр. 461025478
+
+# Google-таблица заявок (мини-CRM). Вставьте URL веб-приложения Apps Script
+# (инструкция — в файле google-sheet-webhook.md рядом с ботом).
+# Пусто — запись в таблицу просто отключена, бот работает как обычно.
+SHEET_WEBHOOK = os.environ.get("GB_SHEET_WEBHOOK", "https://script.google.com/macros/s/AKfycbx57rCfNoTvy6wicnA0VJ_3b5mAXWN5-vWrvuvGMMEPOD2Cm04mr6xV_WbTaDBXNgPhoA/exec")
+
+
+def _sheet_post_sync(payload: dict):
+    req = urllib.request.Request(
+        SHEET_WEBHOOK,
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    urllib.request.urlopen(req, timeout=15).read()
+
+
+async def sheet_append(payload: dict):
+    """Дописать строку в Google-таблицу заявок. Ошибки не роняют бота."""
+    if not SHEET_WEBHOOK:
+        return
+    try:
+        await asyncio.to_thread(_sheet_post_sync, payload)
+    except Exception as e:
+        log.error("Не удалось записать заявку в Google-таблицу: %s", e)
 
 # Сайт и контакты (для текста сообщений)
 SITE = "gazoblok34.ru"
@@ -192,6 +220,18 @@ async def get_comment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         log.warning("ADMIN_CHAT_ID не задан — заявка не отправлена админу:\n%s", admin_text)
 
+    # Запись в Google-таблицу (мини-CRM)
+    await sheet_append({
+        "type": "Заявка",
+        "name": d.get("name", ""),
+        "phone": d.get("phone", ""),
+        "need": d.get("need", ""),
+        "volume": "",
+        "address": "",
+        "tg": f"{username} (id {user.id})",
+        "comment": d.get("comment") or "",
+    })
+
     await update.message.reply_text(
         "Спасибо! Заявку принял ✅\n\n"
         "Мастер свяжется с вами в ближайшее время, поможет с расчётом и оформит заказ.\n\n"
@@ -298,6 +338,18 @@ async def beton_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
             log.error("Не удалось отправить заказ бетона админу: %s", e)
     else:
         log.warning("ADMIN_CHAT_ID не задан — заказ бетона не отправлен админу:\n%s", admin_text)
+
+    # Запись в Google-таблицу (мини-CRM)
+    await sheet_append({
+        "type": "Бетон",
+        "name": "",
+        "phone": d.get("b_phone", ""),
+        "need": f"Бетон {d.get('b_grade', '')}".strip(),
+        "volume": d.get("b_volume", ""),
+        "address": d.get("b_addr", ""),
+        "tg": f"{username} (id {user.id})",
+        "comment": "",
+    })
 
     await update.message.reply_text(
         "Заказ принял ✅\n\n"
