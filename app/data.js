@@ -335,10 +335,23 @@ function gbClone(o) { return JSON.parse(JSON.stringify(o)); }
    2) GB_PUBLISHED — «опубликованные для всех» правки из файла app/content.js (если есть);
    3) localStorage — локальный черновик в этом браузере.
    Каждый следующий уровень перекрывает предыдущий. */
+/* Склейка блока Аналитики: пустые значения из сохранённого контента
+   НЕ затирают номера счётчиков, заданные в коде. */
+function gbMergeAnalytics(baseA, savedA) {
+  const out = Object.assign({}, baseA || {});
+  for (const k in (savedA || {})) {
+    const v = savedA[k];
+    if (v !== undefined && v !== null && String(v).trim() !== '') out[k] = v;
+  }
+  return out;
+}
+
 function gbBase() {
   const base = gbClone(GB_DEFAULTS);
   if (window.GB_PUBLISHED && typeof window.GB_PUBLISHED === 'object') {
-    return Object.assign(base, gbClone(window.GB_PUBLISHED));
+    const pub = gbClone(window.GB_PUBLISHED);
+    pub.ANALYTICS = gbMergeAnalytics(base.ANALYTICS, pub.ANALYTICS);
+    return Object.assign(base, pub);
   }
   return base;
 }
@@ -349,6 +362,7 @@ function gbLoad() {
     const raw = localStorage.getItem(GB_KEY);
     if (raw) {
       const saved = JSON.parse(raw);
+      saved.ANALYTICS = gbMergeAnalytics(base.ANALYTICS, saved.ANALYTICS);
       return Object.assign(base, saved);
     }
   } catch (e) { /* ignore */ }
@@ -379,44 +393,45 @@ window.GBStore = {
    Подключает счётчик, если в админке указан номер (ANALYTICS.yandexId).
    Это официальный код Метрики — он начинает считать посетителей. */
 window.gbInitMetrika = function () {
+  /* ---------- Яндекс.Метрика ---------- */
   try {
     const id = (window.GB && window.GB.ANALYTICS && String(window.GB.ANALYTICS.yandexId || '').trim()) || '';
-    if (!/^\d{4,}$/.test(id)) return;            // нет валидного номера — выходим
-    if (window.__gbMetrikaDone) return;
-    window.__gbMetrikaDone = true;
+    if (/^\d{4,}$/.test(id) && !window.__gbMetrikaDone) {
+      window.__gbMetrikaDone = true;
 
-    (function (m, e, t, r, i, k, a) {
-      m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments); };
-      m[i].l = 1 * new Date();
-      for (var j = 0; j < document.scripts.length; j++) { if (document.scripts[j].src === r) { return; } }
-      k = e.createElement(t), a = e.getElementsByTagName(t)[0];
-      k.async = 1; k.src = r; a.parentNode.insertBefore(k, a);
-    })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
+      (function (m, e, t, r, i, k, a) {
+        m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments); };
+        m[i].l = 1 * new Date();
+        for (var j = 0; j < document.scripts.length; j++) { if (document.scripts[j].src === r) { return; } }
+        k = e.createElement(t), a = e.getElementsByTagName(t)[0];
+        k.async = 1; k.src = r; a.parentNode.insertBefore(k, a);
+      })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
 
-    window.ym(Number(id), 'init', { ssr: true, clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true, ecommerce: 'dataLayer', referrer: document.referrer, url: location.href });
+      window.ym(Number(id), 'init', { ssr: true, clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true, ecommerce: 'dataLayer', referrer: document.referrer, url: location.href });
 
-    const ns = document.createElement('noscript');
-    ns.innerHTML = '<div><img src="https://mc.yandex.ru/watch/' + id +
-      '" style="position:absolute;left:-9999px;" alt="" /></div>';
-    document.body.appendChild(ns);
+      const ns = document.createElement('noscript');
+      ns.innerHTML = '<div><img src="https://mc.yandex.ru/watch/' + id +
+        '" style="position:absolute;left:-9999px;" alt="" /></div>';
+      document.body.appendChild(ns);
+    }
   } catch (e) { /* ignore */ }
 
   /* ---------- Google Analytics (gtag.js) ---------- */
   try {
     const gid = (window.GB && window.GB.ANALYTICS && String(window.GB.ANALYTICS.googleId || '').trim()) || '';
-    if (!/^G-[A-Z0-9]{6,}$/i.test(gid)) return;   // нет валидного идентификатора — выходим
-    if (window.__gbGtagDone) return;
-    window.__gbGtagDone = true;
+    if (/^G-[A-Z0-9]{6,}$/i.test(gid) && !window.__gbGtagDone) {
+      window.__gbGtagDone = true;
 
-    const s = document.createElement('script');
-    s.async = true;
-    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gid;
-    document.head.appendChild(s);
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gid;
+      document.head.appendChild(s);
 
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { window.dataLayer.push(arguments); }
-    window.gtag = window.gtag || gtag;
-    window.gtag('js', new Date());
-    window.gtag('config', gid);
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { window.dataLayer.push(arguments); }
+      window.gtag = window.gtag || gtag;
+      window.gtag('js', new Date());
+      window.gtag('config', gid);
+    }
   } catch (e) { /* ignore */ }
 };
