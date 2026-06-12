@@ -25,7 +25,7 @@ const GB_DEFAULTS = {
 
   /* --- Аналитика. yandexId — номер счётчика Яндекс.Метрики (только цифры). --- */
   ANALYTICS: {
-    yandexId: "",
+    yandexId: "109796557",
   },
 
   /* --- Socials --- */
@@ -391,7 +391,7 @@ window.gbInitMetrika = function () {
       k.async = 1; k.src = r; a.parentNode.insertBefore(k, a);
     })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
 
-    window.ym(Number(id), 'init', { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true });
+    window.ym(Number(id), 'init', { ssr: true, clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true, ecommerce: 'dataLayer', referrer: document.referrer, url: location.href });
 
     const ns = document.createElement('noscript');
     ns.innerHTML = '<div><img src="https://mc.yandex.ru/watch/' + id +
