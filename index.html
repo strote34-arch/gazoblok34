@@ -101,6 +101,32 @@
 
 <script src="app/content.js?v=1"></script>
 <script src="app/data.js?v=14"></script>
+<script>
+/* FAQ-микроразметка для богатых сниппетов в Яндекс/Google.
+   Строится из живых данных (включая правки из админки), чтобы всегда совпадала с сайтом. */
+(function () {
+  try {
+    var faq = (window.GB && window.GB.FAQ) || [];
+    if (!faq.length) return;
+    var strip = function (s) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); };
+    var schema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faq.map(function (f) {
+        return {
+          "@type": "Question",
+          "name": strip(f.q),
+          "acceptedAnswer": { "@type": "Answer", "text": strip(f.a) }
+        };
+      })
+    };
+    var el = document.createElement('script');
+    el.type = 'application/ld+json';
+    el.textContent = JSON.stringify(schema);
+    document.head.appendChild(el);
+  } catch (e) {}
+})();
+</script>
 <script src="image-slot.js"></script>
 <script type="text/babel" src="tweaks-panel.jsx"></script>
 <script type="text/babel" src="app/calculator.jsx?v=6"></script>
